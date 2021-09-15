@@ -1,0 +1,81 @@
+#yaml 配置
+version: '3.7'
+services:
+  web:
+    image: ghcr.io/secosun/jhnginx:v2
+    build:
+      context: ./NGINX
+      dockerfile: Dockerfile
+      labels: 
+        - "com.jhvege.description=Portal webapp"
+        - "com.jhvege.department=Finance"
+        - "com.jhvege.label-with-empty-value"
+#    security_opt:
+#     - seccomp=seccomp.json 
+    ports:
+     - "8088:80"
+    container_name: jhnginxd9dev
+    links:
+      - php
+    depends_on: 
+      - db
+      - php
+    logging: 
+      driver: json-file
+      options:
+        max-size: "200k" # 单个文件大小为200k
+        max-file: "10" # 最多10个文件
+    volumes:
+      - jhdrupald9:/usr/share/nginx
+  db:
+    image: ghcr.io/secosun/jhmysql:v2
+    build:
+      context: ./DB
+      dockerfile: Dockerfile
+      labels: 
+        - "com.jhvege.description=JHMysql"
+        - "com.jhvege.department=Finance"
+        - "com.jhvege.label-with-empty-value"
+    logging: 
+      driver: json-file
+      options: 
+        max-size: "200k" # 单个文件大小为200k
+        max-file: "10" # 最多10个文件
+    volumes:
+         - jhmysqld9:/var/lib/mysql
+#    security_opt:
+#     - seccomp=seccomp.json 
+    expose:
+      - "3306"
+    container_name: jhmysqld9dev
+  php: 
+    image: ghcr.io/secosun/jhphp:v2
+    build: 
+      context: ./PHP
+      dockerfile: Dockerfile
+      labels: 
+        - "com.jhvege.description=JHPHP"
+        - "com.jhvege.department=Finance"
+        - "com.jhvege.label-with-empty-value"
+    expose: 
+       - "9000"
+    links:
+      - db
+    logging: 
+      driver: json-file
+      options:
+        max-size: "200k" # 单个文件大小为200k
+        max-file: "10" # 最多10个文件
+ #   security_opt:
+ #    - seccomp=seccomp.json 
+    container_name: jhphpd9dev
+    hostname: localhost
+    volumes:
+      - jhdrupald9:/usr/share/nginx
+volumes:
+  jhdrupald9: {}
+  jhmysqld9: {}
+
+networks:
+  default:
+    driver: bridge
